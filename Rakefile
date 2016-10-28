@@ -13,7 +13,7 @@
 require 'rake'
 require 'rake/testtask'
 require 'rake/rdoctask'
-require 'rake/gempackagetask'
+#require 'rake/gempackagetask'
 require 'fileutils'
 
 Rake::TaskManager.class_eval do
@@ -44,50 +44,50 @@ BUILD_TZ_CLASSES_DIR = 'lib/tzinfo.build_tz_classes'
 
 SPEC = eval(File.read('tzinfo.gemspec'))
 
-package_task = Rake::GemPackageTask.new(SPEC) do |pkg|
-  pkg.need_zip = true
-  pkg.need_tar_gz = true
-  pkg.tar_command = '__tar_with_owner__'
-end
+# package_task = Rake::GemPackageTask.new(SPEC) do |pkg|
+#   pkg.need_zip = true
+#   pkg.need_tar_gz = true
+#   pkg.tar_command = '__tar_with_owner__'
+# end
 
-# Replace the Rake::PackageTask task that prepares the files to package with
-# a version that ensures the permissions are correct for the package.
-# Also just copy rather than link the files so that old versions are maintained.
-remove_task package_task.package_dir_path
-file package_task.package_dir_path => [package_task.package_dir] + package_task.package_files do
-  mkdir_p package_task.package_dir_path rescue nil
-  chmod(0755, package_task.package_dir_path)
-  package_task.package_files.each do |fn|
-    f = File.join(package_task.package_dir_path, fn)
-    fdir = File.dirname(f)
-    mkdir_p(fdir) if !File.exist?(fdir)
-    if File.directory?(fn)
-      mkdir_p(f)
-      chmod(0755, f)
-    else
-      rm_f f
-      cp(fn, f)
-      chmod(0644, f)
-    end
-  end
-end
+# # Replace the Rake::PackageTask task that prepares the files to package with
+# # a version that ensures the permissions are correct for the package.
+# # Also just copy rather than link the files so that old versions are maintained.
+# remove_task package_task.package_dir_path
+# file package_task.package_dir_path => [package_task.package_dir] + package_task.package_files do
+#   mkdir_p package_task.package_dir_path rescue nil
+#   chmod(0755, package_task.package_dir_path)
+#   package_task.package_files.each do |fn|
+#     f = File.join(package_task.package_dir_path, fn)
+#     fdir = File.dirname(f)
+#     mkdir_p(fdir) if !File.exist?(fdir)
+#     if File.directory?(fn)
+#       mkdir_p(f)
+#       chmod(0755, f)
+#     else
+#       rm_f f
+#       cp(fn, f)
+#       chmod(0644, f)
+#     end
+#   end
+# end
 
 
-# Replace the Rake::GemPackageTask task that builds the gem with a version that
-# changes to the copied package directory first. This allows the gem builder
-# to pick up the correct file permissions.
-remove_task "#{package_task.package_dir}/#{package_task.gem_file}"
-file "#{package_task.package_dir}/#{package_task.gem_file}" => [package_task.package_dir] + package_task.gem_spec.files do
-  when_writing("Creating GEM") do
-    chdir(package_task.package_dir_path) do
-      Gem::Builder.new(package_task.gem_spec).build
-    end
+# # Replace the Rake::GemPackageTask task that builds the gem with a version that
+# # changes to the copied package directory first. This allows the gem builder
+# # to pick up the correct file permissions.
+# remove_task "#{package_task.package_dir}/#{package_task.gem_file}"
+# file "#{package_task.package_dir}/#{package_task.gem_file}" => [package_task.package_dir] + package_task.gem_spec.files do
+#   when_writing("Creating GEM") do
+#     chdir(package_task.package_dir_path) do
+#       Gem::Builder.new(package_task.gem_spec).build
+#     end
     
-    verbose(true) do
-      mv File.join(package_task.package_dir_path, package_task.gem_file), "#{package_task.package_dir}/#{package_task.gem_file}"
-    end
-  end
-end
+#     verbose(true) do
+#       mv File.join(package_task.package_dir_path, package_task.gem_file), "#{package_task.package_dir}/#{package_task.gem_file}"
+#     end
+#   end
+# end
 
 
 Rake::TestTask.new('test') do |t|
